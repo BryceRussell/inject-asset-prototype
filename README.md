@@ -1,6 +1,6 @@
 # Prototype for injecting static assets into Astro bundle
 
-Main code is in `static-asset-controller.ts` and `astro.config.ts`, run the `dev` and `build` script and watch the console
+Main code is in [`static-asset-controller.ts`](static-asset-controller.ts) and [`astro.config.ts`](astro.config.ts), run the `dev` and `build` script and watch the console
 
 ### Why?
 
