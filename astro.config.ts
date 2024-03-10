@@ -14,7 +14,6 @@ export default defineConfig({
 
 					console.log(
 						"astro:config:setup",
-						"Static asset: ",
 						getStaticAsset("/styles.css"),
 					);
 
@@ -31,7 +30,6 @@ export default defineConfig({
 
 					console.log(
 						"astro:server:setup",
-						"Static asset: ",
 						getStaticAsset("/styles.css"),
 					);
 				},
@@ -42,14 +40,12 @@ export default defineConfig({
 				"astro:build:start": () => {
 					console.log(
 						"astro:build:start",
-						"Static asset: ",
 						getStaticAsset("/styles.css"),
 					);
 				},
 				"astro:build:setup": () => {
 					console.log(
 						"astro:build:setup",
-						"Static asset: ",
 						getStaticAsset("/styles.css"),
 					);
 				},
@@ -58,21 +54,18 @@ export default defineConfig({
 				"astro:build:ssr": () => {
 					console.log(
 						"astro:build:ssr",
-						"Static asset: ",
 						getStaticAsset("/styles.css"),
 					);
 				},
 				"astro:build:generated": () => {
 					console.log(
 						"astro:build:generated",
-						"Static asset: ",
 						getStaticAsset("/styles.css"),
 					);
 				},
 				"astro:build:done": () => {
 					console.log(
 						"astro:build:done",
-						"Static asset: ",
 						getStaticAsset("/styles.css"),
 					);
 				},
