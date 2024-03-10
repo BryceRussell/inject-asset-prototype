@@ -1,0 +1,23 @@
+{
+	"name": "inject-asset",
+	"type": "module",
+	"version": "0.0.1",
+	"scripts": {
+		"dev": "astro dev",
+		"start": "astro dev",
+		"build": "astro build",
+		"preview": "astro preview",
+		"astro": "astro",
+		"lint": "biome check .",
+		"lint:fix": "biome check --apply ."
+	},
+	"dependencies": {
+		"@astrojs/check": "^0.5.6",
+		"@biomejs/biome": "^1.6.0",
+		"@types/node": "^20.11.25",
+		"astro": "^4.4.15",
+		"fast-glob": "^3.3.2",
+		"typescript": "^5.4.2",
+		"vite": "^5.1.5"
+	}
+}
