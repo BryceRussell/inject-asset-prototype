@@ -10,6 +10,7 @@ Main code is in [`static-asset-controller.ts`](static-asset-controller.ts) and [
 
 ### Limitations
 
+- Has to set `vite.build.assetsInlineLimit: 0` to prevent inlining of assets
 - Can only access bundled/hashed paths (`/_astro/styles.DEh1v8hz.css`) inside build hooks:
   - `astro:build:ssr`
   - `astro:build:generated`
