@@ -39,7 +39,7 @@ export default function () {
         console.log(getStaticAsset("/cat.png"));
       },
       "astro:server:setup": (params) => {
-        //  Handle static assets in dev mdoe
+        //  Handle static assets in dev mode
         staticAssetMiddleware(params);
       },
 
