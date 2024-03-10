@@ -62,6 +62,8 @@ export function staticAssetController() {
 			vite: { plugins: [plugin], build: { assetsInlineLimit: 0 } },
 		});
 
+		if (command !== "build") return
+
 		injectScript(
 			"page-ssr",
 			files
