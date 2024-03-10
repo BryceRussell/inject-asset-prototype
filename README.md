@@ -19,33 +19,42 @@ Main code is in [`static-asset-controller.ts`](static-asset-controller.ts) and [
 ### Example
 
 ```ts
+import { staticAssetController } from "./static-asset-controller";
+
 export default function () {
-    {
-      name: "inject-assets",
-      hooks: {
-        "astro:config:setup": (params) => {
-          addStaticAssetDir(params, { dir: "static" });
 
-          // { resourceId: null, fileName: "..../cat.png", pathname: "/cat.png" }
-          console.log(getStaticAsset("/cat.png"));
-        },
-        "astro:server:setup": (params) => {
-          //  Handle static assets in dev mdoe
-          staticAssetMiddleware(params);
-        },
+  const { 
+    getStaticAsset,
+    staticAssetMiddleware,
+    addStaticAssetDir
+  } = staticAssetController();
+
+  return {
+    name: "inject-assets",
+    hooks: {
+      "astro:config:setup": (params) => {
+        addStaticAssetDir(params, { dir: "static" });
+
+        // { resourceId: null, fileName: "..../cat.png", pathname: "/cat.png" }
+        console.log(getStaticAsset("/cat.png"));
+      },
+      "astro:server:setup": (params) => {
+        //  Handle static assets in dev mdoe
+        staticAssetMiddleware(params);
+      },
 
 
-        // { resourceId: "BIMVZw5i", fileName: "..../cat.png", pathname: "/_astro/cat.DEh1v8hz.png" }
-        "astro:build:ssr": () => {
-          console.log(getStaticAsset("/cat.png"));
-        },
-        "astro:build:generated": () => {
-          console.log(getStaticAsset("/cat.png"));
-        },
-        "astro:build:done": () => {
-          console.log(getStaticAsset("/cat.png"));
-        },
+      // { resourceId: "BIMVZw5i", fileName: "..../cat.png", pathname: "/_astro/cat.DEh1v8hz.png" }
+      "astro:build:ssr": () => {
+        console.log(getStaticAsset("/cat.png"));
+      },
+      "astro:build:generated": () => {
+        console.log(getStaticAsset("/cat.png"));
+      },
+      "astro:build:done": () => {
+        console.log(getStaticAsset("/cat.png"));
       },
     },
+  },
 }
 ```
