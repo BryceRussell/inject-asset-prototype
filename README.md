@@ -5,8 +5,8 @@ Main code is in [`static-asset-controller.ts`](static-asset-controller.ts) and [
 ### Why?
 
 - Inject static assets from any folder
+- Include asset inside Astro bundle
 - Access the bundled/hashed path of an asset inside an integration
-
 
 ### Limitations
 
@@ -14,3 +14,38 @@ Main code is in [`static-asset-controller.ts`](static-asset-controller.ts) and [
   - `astro:build:ssr`
   - `astro:build:generated`
   - `astro:build:done`
+
+
+### Example
+
+```ts
+export default function () {
+		{
+			name: "inject-assets",
+			hooks: {
+				"astro:config:setup": (params) => {
+					addStaticAssetDir(params, { dir: "static" });
+
+          // { resourceId: null, fileName: "..../cat.png", pathname: "/cat.png" }
+					console.log(getStaticAsset("/cat.png"));
+				},
+				"astro:server:setup": (params) => {
+          //  Handle static assets in dev mdoe
+					staticAssetMiddleware(params);
+				},
+
+
+        // { resourceId: "BIMVZw5i", fileName: "..../cat.png", pathname: "/_astro/cat.DEh1v8hz.png" }
+				"astro:build:ssr": () => {
+					console.log(getStaticAsset("/cat.png"));
+				},
+				"astro:build:generated": () => {
+					console.log(getStaticAsset("/cat.png"));
+				},
+				"astro:build:done": () => {
+					console.log(getStaticAsset("/cat.png"));
+				},
+			},
+		},
+}
+```
