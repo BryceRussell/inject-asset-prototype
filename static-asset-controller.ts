@@ -7,36 +7,6 @@ import { AstroError } from "astro/errors";
 import fg from "fast-glob";
 import type { Plugin } from "vite";
 
-// Validates/transforms strings into absolute directory path
-function stringToDir(base: string, path: string): string {
-	// Check if path is string
-	if (!path) {
-		throw new AstroError(`Invalid path!`, `"${path}"`);
-	}
-
-	// Check if path is a file URL
-	if (path.startsWith("file:/")) {
-		path = fileURLToPath(path);
-	}
-
-	// Check if path is relative
-	if (!isAbsolute(path)) {
-		path = resolve(base, path);
-	}
-
-	// Check if path is a file
-	if (extname(path)) {
-		path = dirname(path);
-	}
-
-	// Check if path exists
-	if (!existsSync(path)) {
-		throw new AstroError(`Path does not exist!`, `"${path}"`);
-	}
-
-	return path;
-}
-
 export function staticAssetController() {
 	const assets = new Map<
 		string,
@@ -61,46 +31,41 @@ export function staticAssetController() {
 			assets.set(pathname, { referenceId: null, filePath, pathname });
 		}
 
-		function createVitePlugin(): Plugin {
-			return {
-				name: "vite-plugin-find-injected-assets",
-				enforce: "pre",
-				async load(id) {
-					if (id.startsWith(cwd)) {
-						const filePath = id.slice(0, id.indexOf("?"));
-						const relativePath = filePath.slice(cwd.length);
-						let referenceId = null;
-						if (command === "build") {
-							referenceId = this.emitFile({
-								name: basename(filePath),
-								source: await readFile(filePath),
-								type: "asset",
-							});
-						}
-						assets.set(relativePath, {
-							referenceId,
-							filePath,
-							pathname: relativePath,
-						});
-					}
-				},
-				generateBundle() {
-					for (const [path, asset] of assets.entries()) {
-						asset.pathname = "/" + this.getFileName(asset.referenceId!);
-						assets.set(path, asset);
-					}
-				},
-			};
-		}
+		const plugin: Plugin = {
+			name: "vite-plugin-find-injected-assets",
+			enforce: "pre",
+			async load(id) {
+				if (id.startsWith(cwd) && command === "build") {
+					const filePath = id.slice(0, id.indexOf("?"));
+					const pathname = filePath.slice(cwd.length);
+					const referenceId = this.emitFile({
+						name: basename(filePath),
+						source: await readFile(filePath),
+						type: "asset",
+					});
+					assets.set(pathname, {
+						referenceId,
+						filePath,
+						pathname,
+					});
+				}
+			},
+			generateBundle() {
+				for (const [path, asset] of assets.entries()) {
+					asset.pathname = `/${this.getFileName(asset.referenceId!)}`;
+					assets.set(path, asset);
+				}
+			},
+		};
 
 		updateConfig({
-			vite: { plugins: [createVitePlugin()], build: { assetsInlineLimit: 0 } },
+			vite: { plugins: [plugin], build: { assetsInlineLimit: 0 } },
 		});
 
 		injectScript(
 			"page-ssr",
 			files
-				.map((asset) => `import ${JSON.stringify(asset + "?url")};`)
+				.map((filepath) => `import ${JSON.stringify(filepath + "?url")};`)
 				.join(""),
 		);
 	}
@@ -134,4 +99,28 @@ export function staticAssetController() {
 		staticAssetMiddleware,
 		addStaticAssetDir,
 	};
+}
+
+function stringToDir(base: string, path: string): string {
+	if (!path) {
+		throw new AstroError(`Invalid path!`, `"${path}"`);
+	}
+
+	if (path.startsWith("file:/")) {
+		path = fileURLToPath(path);
+	}
+
+	if (!isAbsolute(path)) {
+		path = resolve(base, path);
+	}
+
+	if (extname(path)) {
+		path = dirname(path);
+	}
+
+	if (!existsSync(path)) {
+		throw new AstroError(`Path does not exist!`, `"${path}"`);
+	}
+
+	return path;
 }
