@@ -16,13 +16,6 @@ export default defineConfig({
 						"astro:config:setup",
 						getStaticAsset("/styles.css"),
 					);
-
-					if (params.command !== "dev") return;
-
-					setInterval(() => {
-						const asset = getStaticAsset("/styles.css");
-						if (asset) console.log("Static asset: ", asset);
-					}, 5000);
 				},
 
 				"astro:server:setup": (params) => {
