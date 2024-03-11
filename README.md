@@ -21,7 +21,7 @@ Main code is in [`static-asset-controller.ts`](static-asset-controller.ts) and [
 ### Limitations
 
 - The bundled/hashed path (`/_astro/styles.DEh1v8hz.css`) can only be accessed inside:
-    - Vite plugin [`generateBundle()`](https://rollupjs.org/plugin-development/#generatebundle) hook
+    - Vite plugin [`generateBundle()`](https://rollupjs.org/plugin-development/#generatebundle) hook or any hook after it
     - `astro:build:ssr` hook
     - `astro:build:generated` hook
     - `astro:build:done` hook
