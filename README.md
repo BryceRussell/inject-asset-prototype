@@ -32,11 +32,11 @@ export default defineConfig({
         "astro:config:setup": (params) => {
           initStaticAssets(params, { dir: "static", cwd: import.meta.url });
 
-          // { resourceId: null, fileName: ".../styles.css", pathname: "/styles.css" }
+          // { resourceId: null, filename: ".../styles.css", pathname: "/styles.css" }
           console.log("astro:config:setup", assets);
         },
 
-        // { resourceId: "BIMVZw5i", fileName: ".../styles.css", pathname: "/_astro/styles.DEh1v8hz.css" }
+        // { resourceId: "BIMVZw5i", filename: ".../styles.css", pathname: "/_astro/styles.DEh1v8hz.css" }
         "astro:build:ssr": () => {
           console.log("astro:build:ssr", assets);
         },
