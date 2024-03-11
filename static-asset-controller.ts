@@ -14,7 +14,6 @@ export function staticAssetController() {
 	>();
 
 	const components = new Set();
-	let chunks = 0;
 	let size = 0;
 
 	let plugins = 1;
@@ -38,6 +37,8 @@ export function staticAssetController() {
 			(filepath) => `import ${JSON.stringify(filepath + "?injectAsset")};\n`,
 		);
 		const numOfImports = imports.length;
+
+		let chunks = 0;
 
 		for (const filepath of files) {
 			const pathname = filepath.slice(base.length);
