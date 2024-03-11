@@ -11,7 +11,7 @@ export default defineConfig({
 				"astro:config:setup": (params) => {
 					initStaticAssets(params, { dir: "static", cwd: import.meta.url });
 
-          // { resourceId: null, fileName: ".../styles.css", pathname: "/styles.css" }
+					// { resourceId: null, fileName: ".../styles.css", pathname: "/styles.css" }
 					console.log("astro:config:setup", assets);
 				},
 

@@ -21,10 +21,13 @@ export function staticAssetController() {
 			injectScript,
 			updateConfig,
 		}: HookParameters<"astro:config:setup">,
-		{ dir, cwd }: { dir: string, cwd: string }
+		{ dir, cwd }: { dir: string; cwd: string },
 	) {
 		const rootDir = fileURLToPath(config.root.toString());
-		const base = stringToDir(stringToDir(rootDir, cwd), dir).replace(/\\+/g, "/");
+		const base = stringToDir(stringToDir(rootDir, cwd), dir).replace(
+			/\\+/g,
+			"/",
+		);
 		const files = fg.sync("**/*", { cwd: base, absolute: true });
 
 		for (const filePath of files) {
