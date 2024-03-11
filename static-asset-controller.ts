@@ -48,7 +48,7 @@ export function staticAssetController() {
 			name: `vite-plugin-inject-static-assets-${pluginCount}`,
 			enforce: "pre",
 			resolveId(id) {
-				if (id.endsWith(".astro")) {
+				if (command === "build" && id.endsWith(".astro")) {
 					components.add(id);
 					chunks = components.size;
 					chunkSize = Math.round(numOfImports / chunks);
