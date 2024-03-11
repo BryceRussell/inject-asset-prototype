@@ -1,7 +1,7 @@
 import { defineConfig } from "astro/config";
-import { staticAssetController } from "./static-asset-controller";
+import { injectStaticAssets } from "./static-asset-controller";
 
-const { assets, initStaticAssets } = staticAssetController();
+let assets: ReturnType<typeof injectStaticAssets>;
 
 export default defineConfig({
 	integrations: [
@@ -9,7 +9,10 @@ export default defineConfig({
 			name: "inject-assets",
 			hooks: {
 				"astro:config:setup": (params) => {
-					initStaticAssets(params, { dir: "static", cwd: import.meta.url });
+					assets = injectStaticAssets(params, {
+						dir: "static",
+						cwd: import.meta.url,
+					});
 
 					// { resourceId: null, fileName: ".../styles.css", pathname: "/styles.css" }
 					console.log(
