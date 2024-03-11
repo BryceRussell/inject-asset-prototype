@@ -17,7 +17,7 @@ export function staticAssetController() {
 	let chunks = 0;
 	let chunkSize = 0;
 
-	const pluginCount = 1;
+	let pluginCount = 1;
 
 	function initStaticAssets(
 		{
@@ -45,7 +45,7 @@ export function staticAssetController() {
 		}
 
 		const plugin: Plugin = {
-			name: `vite-plugin-inject-static-assets-${pluginCount}`,
+			name: `vite-plugin-inject-static-assets-${pluginCount++}`,
 			enforce: "pre",
 			resolveId(id) {
 				if (command === "build" && id.endsWith(".astro")) {
