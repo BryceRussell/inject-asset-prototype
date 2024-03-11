@@ -1,6 +1,6 @@
 # Prototype for injecting static assets into Astro bundle
 
-Main code is in [`static-asset-controller.ts`](static-asset-controller.ts) and [`astro.config.ts`](astro.config.ts), run the `dev` and `build` script and watch the console
+Main code is in [`static-asset-controller.ts`](static-asset-controller.ts) and [`astro.config.ts`](astro.config.ts). To test, run the `dev` or `build` commands and watch the console
 
 ### Why?
 
@@ -10,7 +10,6 @@ Main code is in [`static-asset-controller.ts`](static-asset-controller.ts) and [
 
 ### Limitations
 
-- Has to set `vite.build.assetsInlineLimit: 0` to prevent inlining of assets
 - Can only access bundled/hashed paths (`/_astro/styles.DEh1v8hz.css`) inside build hooks:
   - `astro:build:ssr`
   - `astro:build:generated`
@@ -20,42 +19,35 @@ Main code is in [`static-asset-controller.ts`](static-asset-controller.ts) and [
 ### Example
 
 ```ts
+import { defineConfig } from "astro/config";
 import { staticAssetController } from "./static-asset-controller";
 
-export default function () {
+const { assets, initStaticAssets } = staticAssetController();
 
-  const { 
-    getStaticAsset,
-    staticAssetMiddleware,
-    addStaticAssetDir
-  } = staticAssetController();
+export default defineConfig({
+	integrations: [
+		{
+			name: "inject-assets",
+			hooks: {
+				"astro:config:setup": (params) => {
+					initStaticAssets(params, { dir: "static", cwd: import.meta.url });
 
-  return {
-    name: "inject-assets",
-    hooks: {
-      "astro:config:setup": (params) => {
-        addStaticAssetDir(params, { dir: "static" });
+          // { resourceId: null, fileName: ".../styles.css", pathname: "/styles.css" }
+					console.log("astro:config:setup", assets);
+				},
 
-        // { resourceId: null, fileName: "..../cat.png", pathname: "/cat.png" }
-        console.log(getStaticAsset("/cat.png"));
-      },
-      "astro:server:setup": (params) => {
-        //  Handle static assets in dev mode
-        staticAssetMiddleware(params);
-      },
-
-
-      // { resourceId: "BIMVZw5i", fileName: "..../cat.png", pathname: "/_astro/cat.DEh1v8hz.png" }
-      "astro:build:ssr": () => {
-        console.log(getStaticAsset("/cat.png"));
-      },
-      "astro:build:generated": () => {
-        console.log(getStaticAsset("/cat.png"));
-      },
-      "astro:build:done": () => {
-        console.log(getStaticAsset("/cat.png"));
-      },
-    },
-  },
-}
+				// { resourceId: "BIMVZw5i", fileName: ".../styles.css", pathname: "/_astro/styles.DEh1v8hz.css" }
+				"astro:build:ssr": () => {
+					console.log("astro:build:ssr", assets);
+				},
+				"astro:build:generated": () => {
+					console.log("astro:build:generated", assets);
+				},
+				"astro:build:done": () => {
+					console.log("astro:build:done", assets);
+				},
+			},
+		},
+	],
+});
 ```

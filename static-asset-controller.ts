@@ -13,33 +13,32 @@ export function staticAssetController() {
 		{ referenceId: string | null; filePath: string; pathname: string | null }
 	>();
 
-	function addStaticAssetDir(
+	function initStaticAssets(
 		{
 			command,
 			config,
+			logger,
 			injectScript,
 			updateConfig,
 		}: HookParameters<"astro:config:setup">,
-		{ dir }: { dir: string },
+		{ dir, cwd }: { dir: string, cwd: string }
 	) {
 		const rootDir = fileURLToPath(config.root.toString());
-		const cwd = stringToDir(rootDir, dir).replace(/\\+/g, "/");
-		const files = fg.sync("**/*", { cwd, absolute: true });
+		const base = stringToDir(stringToDir(rootDir, cwd), dir).replace(/\\+/g, "/");
+		const files = fg.sync("**/*", { cwd: base, absolute: true });
 
 		for (const filePath of files) {
-			const pathname = filePath.slice(cwd.length);
+			const pathname = filePath.slice(base.length);
 			assets.set(pathname, { referenceId: null, filePath, pathname });
 		}
-
-		if (command !== "build") return;
 
 		const plugin: Plugin = {
 			name: "vite-plugin-find-injected-assets",
 			enforce: "pre",
 			async load(id) {
-				if (id.startsWith(cwd) && id.endsWith("?injectAsset")) {
+				if (id.startsWith(base) && id.endsWith("?injectAsset")) {
 					const filePath = id.slice(0, id.indexOf("?"));
-					const pathname = filePath.slice(cwd.length);
+					const pathname = filePath.slice(base.length);
 					const referenceId = this.emitFile({
 						name: basename(filePath),
 						source: await readFile(filePath),
@@ -52,6 +51,22 @@ export function staticAssetController() {
 					});
 				}
 			},
+			configureServer(server) {
+				server.middlewares.use("/", (req, res, next) => {
+					const path = req.url?.replace(/\?[^]*$/, "");
+					if (path && extname(path) && !path.startsWith("/@")) {
+						const asset = assets.get(path);
+						if (asset) {
+							try {
+								createReadStream(asset.filePath).pipe(res);
+							} catch {
+								logger.warn(`Failed to serve static asset:\t${path}\t${asset}`);
+								next();
+							}
+						} else next();
+					} else next();
+				});
+			},
 			generateBundle() {
 				for (const [path, asset] of assets.entries()) {
 					asset.pathname = `/${this.getFileName(asset.referenceId!)}`;
@@ -61,6 +76,8 @@ export function staticAssetController() {
 		};
 
 		updateConfig({ vite: { plugins: [plugin] } });
+
+		if (command !== "build") return;
 
 		injectScript(
 			"page-ssr",
@@ -72,41 +89,14 @@ export function staticAssetController() {
 		);
 	}
 
-	function staticAssetMiddleware({
-		logger,
-		server,
-	}: HookParameters<"astro:server:setup">) {
-		server.middlewares.use("/", (req, res, next) => {
-			const path = req.url?.replace(/\?[^]*$/, "");
-			if (path && extname(path) && !path.startsWith("/@")) {
-				const asset = assets.get(path);
-				if (asset) {
-					try {
-						createReadStream(asset.filePath).pipe(res);
-					} catch {
-						logger.warn(`Failed to serve static asset:\t${path}\t${asset}`);
-						next();
-					}
-				} else next();
-			} else next();
-		});
-	}
-
-	function getStaticAsset(path: string) {
-		return assets.get(path);
-	}
-
 	return {
-		getStaticAsset,
-		staticAssetMiddleware,
-		addStaticAssetDir,
+		assets,
+		initStaticAssets,
 	};
 }
 
-function stringToDir(base: string, path: string): string {
-	if (!path) {
-		throw new AstroError(`Invalid path!`, `"${path}"`);
-	}
+function stringToDir(base: string, path?: string): string {
+	path ||= "./";
 
 	if (path.startsWith("file:/")) {
 		path = fileURLToPath(path);
@@ -121,7 +111,7 @@ function stringToDir(base: string, path: string): string {
 	}
 
 	if (!existsSync(path)) {
-		throw new AstroError(`Path does not exist!`, `"${path}"`);
+		throw new AstroError(`Directory does not exist!`, `"${path}"`);
 	}
 
 	return path;

@@ -1,8 +1,7 @@
 import { defineConfig } from "astro/config";
 import { staticAssetController } from "./static-asset-controller";
 
-const { getStaticAsset, staticAssetMiddleware, addStaticAssetDir } =
-	staticAssetController();
+const { assets, initStaticAssets } = staticAssetController();
 
 export default defineConfig({
 	integrations: [
@@ -10,36 +9,21 @@ export default defineConfig({
 			name: "inject-assets",
 			hooks: {
 				"astro:config:setup": (params) => {
-					addStaticAssetDir(params, { dir: "static" });
+					initStaticAssets(params, { dir: "static", cwd: import.meta.url });
 
-					console.log("astro:config:setup", getStaticAsset("/styles.css"));
+          // { resourceId: null, fileName: ".../styles.css", pathname: "/styles.css" }
+					console.log("astro:config:setup", assets);
 				},
 
-				"astro:server:setup": (params) => {
-					staticAssetMiddleware(params);
-
-					console.log("astro:server:setup", getStaticAsset("/styles.css"));
-				},
-
-				//  Build
-
-				// getStaticAsset() returns 'undefined', Paths have not been generated
-				"astro:build:start": () => {
-					console.log("astro:build:start", getStaticAsset("/styles.css"));
-				},
-				"astro:build:setup": () => {
-					console.log("astro:build:setup", getStaticAsset("/styles.css"));
-				},
-
-				// getStaticAsset() returns final asset path with hash
+				// { resourceId: "BIMVZw5i", fileName: ".../styles.css", pathname: "/_astro/styles.DEh1v8hz.css" }
 				"astro:build:ssr": () => {
-					console.log("astro:build:ssr", getStaticAsset("/styles.css"));
+					console.log("astro:build:ssr", assets);
 				},
 				"astro:build:generated": () => {
-					console.log("astro:build:generated", getStaticAsset("/styles.css"));
+					console.log("astro:build:generated", assets);
 				},
 				"astro:build:done": () => {
-					console.log("astro:build:done", getStaticAsset("/styles.css"));
+					console.log("astro:build:done", assets);
 				},
 			},
 		},
