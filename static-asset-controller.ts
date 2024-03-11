@@ -54,6 +54,15 @@ export function staticAssetController() {
 					chunkSize = Math.round(numOfImports / chunks);
 				}
 			},
+			transform(code, id) {
+				if (command === "build" && chunks > 0 && id.endsWith(".astro")) {
+					const index = (components.size - chunks) * chunkSize;
+					const chunk = imports.slice(index, index + chunkSize).join("");
+					console.log(numOfImports, chunkSize, index, chunks, "CHUNK: \n", chunk);
+					chunks--;
+					return { code: chunk + code };
+				}
+			},
 			async load(id) {
 				if (
 					command === "build" &&
@@ -72,15 +81,6 @@ export function staticAssetController() {
 						filepath,
 						pathname,
 					});
-				}
-			},
-			transform(code, id) {
-				if (command === "build" && chunks > 0 && id.endsWith(".astro")) {
-					const index = (components.size - chunks) * chunkSize;
-					const chunk = imports.slice(index, index + chunkSize).join("");
-					console.log(numOfImports, chunkSize, index, chunks, "CHUNK: \n", chunk);
-					chunks--;
-					return { code: chunk + code };
 				}
 			},
 			configureServer(server) {
