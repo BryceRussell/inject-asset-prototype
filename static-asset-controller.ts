@@ -10,49 +10,74 @@ import type { Plugin } from "vite";
 export function staticAssetController() {
 	const assets = new Map<
 		string,
-		{ referenceId: string | null; filePath: string; pathname: string | null }
+		{ referenceId: string | null; filepath: string; pathname: string | null }
 	>();
+	
+	const components = new Set()
+	let chunks = 0
+
+	let pluginCount = 1
 
 	function initStaticAssets(
 		{
 			command,
 			config,
 			logger,
-			injectScript,
 			updateConfig,
 		}: HookParameters<"astro:config:setup">,
 		{ dir, cwd }: { dir: string; cwd: string },
 	) {
 		const rootDir = fileURLToPath(config.root.toString());
 		const base = stringToDir(stringToDir(rootDir, cwd), dir).replace(
-			/\\+/g,
+			/\\+|\/+/g,
 			"/",
 		);
 		const files = fg.sync("**/*", { cwd: base, absolute: true });
+		const imports = files
+			.map(
+				(filepath) => `import ${JSON.stringify(filepath + "?injectAsset")};\n`,
+			)
+		const numOfImports = imports.length
 
-		for (const filePath of files) {
-			const pathname = filePath.slice(base.length);
-			assets.set(pathname, { referenceId: null, filePath, pathname });
+		for (const filepath of files) {
+			const pathname = filepath.slice(base.length);
+			assets.set(pathname, { referenceId: null, filepath, pathname });
 		}
 
 		const plugin: Plugin = {
-			name: "vite-plugin-find-injected-assets",
+			name: `vite-plugin-inject-static-assets-${pluginCount}`,
 			enforce: "pre",
+			resolveId(id) {
+				if (id.endsWith('.astro')) {
+					components.add(id)
+					chunks = components.size
+				}
+			},
 			async load(id) {
-				if (id.startsWith(base) && id.endsWith("?injectAsset")) {
-					const filePath = id.slice(0, id.indexOf("?"));
-					const pathname = filePath.slice(base.length);
+				if (command === "build" && id.endsWith("?injectAsset") && id.startsWith(base)) {
+					const filepath = id.slice(0, id.indexOf("?"));
+					const pathname = filepath.slice(base.length);
 					const referenceId = this.emitFile({
-						name: basename(filePath),
-						source: await readFile(filePath),
+						name: basename(filepath),
+						source: await readFile(filepath),
 						type: "asset",
 					});
 					assets.set(pathname, {
 						referenceId,
-						filePath,
+						filepath,
 						pathname,
 					});
 				}
+			},
+			transform(code, id) {
+				if (command === "build" && chunks > 0 && id.endsWith('.astro')) {
+					const size = Math.round(numOfImports / components.size)
+					const index = Math.max(0, ((components.size - chunks) * size))
+					const chunk = imports.slice(index, index + size).join('')
+					console.log(numOfImports, size, index, chunks, "CHUNK: \n", chunk)
+					chunks--
+					return { code: chunk + code }
+				};
 			},
 			configureServer(server) {
 				server.middlewares.use("/", (req, res, next) => {
@@ -61,7 +86,7 @@ export function staticAssetController() {
 						const asset = assets.get(path);
 						if (asset) {
 							try {
-								createReadStream(asset.filePath).pipe(res);
+								createReadStream(asset.filepath).pipe(res);
 							} catch {
 								logger.warn(`Failed to serve static asset:\t${path}\t${asset}`);
 								next();
@@ -72,24 +97,14 @@ export function staticAssetController() {
 			},
 			generateBundle() {
 				for (const [path, asset] of assets.entries()) {
-					asset.pathname = `/${this.getFileName(asset.referenceId!)}`;
+					if (!asset.referenceId) continue;
+					asset.pathname = `/${this.getFileName(asset.referenceId)}`;
 					assets.set(path, asset);
 				}
 			},
 		};
 
 		updateConfig({ vite: { plugins: [plugin] } });
-
-		if (command !== "build") return;
-
-		injectScript(
-			"page-ssr",
-			files
-				.map(
-					(filepath) => `import ${JSON.stringify(filepath + "?injectAsset")};`,
-				)
-				.join(""),
-		);
 	}
 
 	return {
