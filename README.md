@@ -8,9 +8,19 @@ Main code is in [`static-asset-controller.ts`](static-asset-controller.ts) and [
 - Include asset inside Astro bundle
 - Access the bundled/hashed path of an asset inside an integration
 
+### How?
+
+- **Dev**: Uses middleware to serve static assets (`/styles.css`)
+- **Build**: Uses a Vite plugin to:
+    - Inject imports into build (`.../styles.css?injectAsset`)
+    - Intercept injected imports and inject the asset into the build using [`emitFile` from rollup
+](https://rollupjs.org/plugin-development/#this-emitfile)
+    - Update an external `Map` with bundled/hashed pathname (`/_astro/styles.DEh1v8hz.css`)
+    - Integration authors can then `.get` the map for the bundled/hashed path
+
 ### Limitations
 
-1. Can only access bundled/hashed paths (`/_astro/styles.DEh1v8hz.css`) inside:
+- The bundled/hashed path (`/_astro/styles.DEh1v8hz.css`) can only be accessed inside:
     - Vite plugin [`generateBundle()`](https://rollupjs.org/plugin-development/#generatebundle) hook
     - `astro:build:ssr` hook
     - `astro:build:generated` hook
