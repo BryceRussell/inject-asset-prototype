@@ -12,11 +12,11 @@ export function staticAssetController() {
 		string,
 		{ referenceId: string | null; filepath: string; pathname: string | null }
 	>();
-	
-	const components = new Set()
-	let chunks = 0
 
-	let pluginCount = 1
+	const components = new Set();
+	let chunks = 0;
+
+	const pluginCount = 1;
 
 	function initStaticAssets(
 		{
@@ -33,11 +33,10 @@ export function staticAssetController() {
 			"/",
 		);
 		const files = fg.sync("**/*", { cwd: base, absolute: true });
-		const imports = files
-			.map(
-				(filepath) => `import ${JSON.stringify(filepath + "?injectAsset")};\n`,
-			)
-		const numOfImports = imports.length
+		const imports = files.map(
+			(filepath) => `import ${JSON.stringify(filepath + "?injectAsset")};\n`,
+		);
+		const numOfImports = imports.length;
 
 		for (const filepath of files) {
 			const pathname = filepath.slice(base.length);
@@ -48,13 +47,17 @@ export function staticAssetController() {
 			name: `vite-plugin-inject-static-assets-${pluginCount}`,
 			enforce: "pre",
 			resolveId(id) {
-				if (id.endsWith('.astro')) {
-					components.add(id)
-					chunks = components.size
+				if (id.endsWith(".astro")) {
+					components.add(id);
+					chunks = components.size;
 				}
 			},
 			async load(id) {
-				if (command === "build" && id.endsWith("?injectAsset") && id.startsWith(base)) {
+				if (
+					command === "build" &&
+					id.endsWith("?injectAsset") &&
+					id.startsWith(base)
+				) {
 					const filepath = id.slice(0, id.indexOf("?"));
 					const pathname = filepath.slice(base.length);
 					const referenceId = this.emitFile({
@@ -70,14 +73,14 @@ export function staticAssetController() {
 				}
 			},
 			transform(code, id) {
-				if (command === "build" && chunks > 0 && id.endsWith('.astro')) {
-					const size = Math.round(numOfImports / components.size)
-					const index = Math.max(0, ((components.size - chunks) * size))
-					const chunk = imports.slice(index, index + size).join('')
-					console.log(numOfImports, size, index, chunks, "CHUNK: \n", chunk)
-					chunks--
-					return { code: chunk + code }
-				};
+				if (command === "build" && chunks > 0 && id.endsWith(".astro")) {
+					const size = Math.round(numOfImports / components.size);
+					const index = Math.max(0, (components.size - chunks) * size);
+					const chunk = imports.slice(index, index + size).join("");
+					console.log(numOfImports, size, index, chunks, "CHUNK: \n", chunk);
+					chunks--;
+					return { code: chunk + code };
+				}
 			},
 			configureServer(server) {
 				server.middlewares.use("/", (req, res, next) => {
