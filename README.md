@@ -31,9 +31,9 @@ Main code is in [`static-asset-controller.ts`](static-asset-controller.ts) and [
 
 ```ts
 import { defineConfig } from "astro/config";
-import { staticAssetController } from "./static-asset-controller";
+import { injectStaticAssets } from "./static-asset-controller";
 
-const { assets, initStaticAssets } = staticAssetController();
+let assets: ReturnType<typeof injectStaticAssets>;
 
 export default defineConfig({
   integrations: [
@@ -41,21 +41,30 @@ export default defineConfig({
       name: "inject-assets",
       hooks: {
         "astro:config:setup": (params) => {
-          initStaticAssets(params, { dir: "static", cwd: import.meta.url });
+          assets = injectStaticAssets(params, {
+            dir: "static",
+            cwd: import.meta.url,
+          });
 
-          // { resourceId: null, filepath: ".../styles.css", pathname: "/styles.css" }
-          console.log("astro:config:setup", assets);
+          // { resourceId: null, fileName: ".../styles.css", pathname: "/styles.css" }
+          console.log(
+            "astro:config:setup",
+            Array.from(assets.values()).map((a) => a.pathname),
+          );
         },
 
-        // { resourceId: "BIMVZw5i", filepath: ".../styles.css", pathname: "/_astro/styles.DEh1v8hz.css" }
+        // { resourceId: "BIMVZw5i", fileName: ".../styles.css", pathname: "/_astro/styles.DEh1v8hz.css" }
         "astro:build:ssr": () => {
-          console.log("astro:build:ssr", assets);
+          // console.log("astro:build:ssr", assets);
         },
         "astro:build:generated": () => {
-          console.log("astro:build:generated", assets);
+          // console.log("astro:build:generated", assets);
         },
         "astro:build:done": () => {
-          console.log("astro:build:done", assets);
+          console.log(
+            "astro:build:done",
+            Array.from(assets.values()).map((a) => a.pathname),
+          );
         },
       },
     },
