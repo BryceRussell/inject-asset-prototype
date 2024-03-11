@@ -10,10 +10,11 @@ Main code is in [`static-asset-controller.ts`](static-asset-controller.ts) and [
 
 ### Limitations
 
-- Can only access bundled/hashed paths (`/_astro/styles.DEh1v8hz.css`) inside build hooks:
-  - `astro:build:ssr`
-  - `astro:build:generated`
-  - `astro:build:done`
+1. Can only access bundled/hashed paths (`/_astro/styles.DEh1v8hz.css`) inside:
+    - Vite plugin [`generateBundle()`](https://rollupjs.org/plugin-development/#generatebundle) hook
+    - `astro:build:ssr` hook
+    - `astro:build:generated` hook
+    - `astro:build:done` hook
 
 
 ### Example
