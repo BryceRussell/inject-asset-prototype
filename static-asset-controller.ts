@@ -31,11 +31,13 @@ export function staticAssetController() {
 			assets.set(pathname, { referenceId: null, filePath, pathname });
 		}
 
+		if (command !== "build") return;
+
 		const plugin: Plugin = {
 			name: "vite-plugin-find-injected-assets",
 			enforce: "pre",
 			async load(id) {
-				if (id.startsWith(cwd) && command === "build") {
+				if (id.startsWith(cwd) && id.endsWith("?injectAsset")) {
 					const filePath = id.slice(0, id.indexOf("?"));
 					const pathname = filePath.slice(cwd.length);
 					const referenceId = this.emitFile({
@@ -58,16 +60,14 @@ export function staticAssetController() {
 			},
 		};
 
-		updateConfig({
-			vite: { plugins: [plugin], build: { assetsInlineLimit: 0 } },
-		});
-
-		if (command !== "build") return
+		updateConfig({ vite: { plugins: [plugin] } });
 
 		injectScript(
 			"page-ssr",
 			files
-				.map((filepath) => `import ${JSON.stringify(filepath + "?url")};`)
+				.map(
+					(filepath) => `import ${JSON.stringify(filepath + "?injectAsset")};`,
+				)
 				.join(""),
 		);
 	}
