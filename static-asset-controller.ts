@@ -15,6 +15,7 @@ export function staticAssetController() {
 
 	const components = new Set();
 	let chunks = 0;
+	let chunkSize = 0;
 
 	const pluginCount = 1;
 
@@ -50,6 +51,7 @@ export function staticAssetController() {
 				if (id.endsWith(".astro")) {
 					components.add(id);
 					chunks = components.size;
+					chunkSize = Math.round(numOfImports / chunks);
 				}
 			},
 			async load(id) {
@@ -74,10 +76,9 @@ export function staticAssetController() {
 			},
 			transform(code, id) {
 				if (command === "build" && chunks > 0 && id.endsWith(".astro")) {
-					const size = Math.round(numOfImports / components.size);
-					const index = Math.max(0, (components.size - chunks) * size);
-					const chunk = imports.slice(index, index + size).join("");
-					console.log(numOfImports, size, index, chunks, "CHUNK: \n", chunk);
+					const index = (components.size - chunks) * chunkSize;
+					const chunk = imports.slice(index, index + chunkSize).join("");
+					console.log(numOfImports, chunkSize, index, chunks, "CHUNK: \n", chunk);
 					chunks--;
 					return { code: chunk + code };
 				}
