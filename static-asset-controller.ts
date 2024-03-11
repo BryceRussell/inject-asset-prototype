@@ -15,9 +15,9 @@ export function staticAssetController() {
 
 	const components = new Set();
 	let chunks = 0;
-	let chunkSize = 0;
+	let size = 0;
 
-	let pluginCount = 1;
+	let plugins = 1;
 
 	function initStaticAssets(
 		{
@@ -45,20 +45,20 @@ export function staticAssetController() {
 		}
 
 		const plugin: Plugin = {
-			name: `vite-plugin-inject-static-assets-${pluginCount++}`,
+			name: `vite-plugin-inject-static-assets-${plugins++}`,
 			enforce: "pre",
 			resolveId(id) {
 				if (command === "build" && id.endsWith(".astro")) {
 					components.add(id);
 					chunks = components.size;
-					chunkSize = Math.round(numOfImports / chunks);
+					size = Math.round(numOfImports / chunks);
 				}
 			},
 			transform(code, id) {
 				if (command === "build" && chunks > 0 && id.endsWith(".astro")) {
-					const index = (components.size - chunks) * chunkSize;
-					const chunk = imports.slice(index, index + chunkSize).join("");
-					console.log(numOfImports, chunkSize, index, chunks, "CHUNK: \n", chunk);
+					const index = (components.size - chunks) * size;
+					const chunk = imports.slice(index, index + size).join("");
+					console.log(numOfImports, size, index, chunks, "CHUNK: \n", chunk);
 					chunks--;
 					return { code: chunk + code };
 				}
