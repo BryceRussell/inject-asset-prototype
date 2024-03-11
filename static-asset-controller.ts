@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import type { HookParameters } from "astro";
 import { AstroError } from "astro/errors";
 import fg from "fast-glob";
-import type { Plugin } from "vite";
+import { type Plugin, normalizePath } from "vite";
 
 export function injectStaticAssets(
 	{
@@ -21,10 +21,7 @@ export function injectStaticAssets(
 		{ referenceId: string | null; filepath: string; pathname: string | null }
 	>();
 	const rootDir = fileURLToPath(config.root.toString());
-	const base = stringToDir(stringToDir(rootDir, cwd), dir).replace(
-		/\\+|\/+/g,
-		"/",
-	);
+	const base = normalizePath(stringToDir(stringToDir(rootDir, cwd), dir));
 	const files = fg.sync("**/*", { cwd: base, absolute: true });
 	const imports = files.map(
 		(filepath) => `import ${JSON.stringify(filepath + "?injectAsset")};\n`,
