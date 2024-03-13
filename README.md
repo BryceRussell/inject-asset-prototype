@@ -4,8 +4,8 @@ Main code is in [`static-asset-controller.ts`](static-asset-controller.ts) and [
 
 ### Why?
 
-- Inject static assets from any folder
-- Include asset inside Astro bundle
+- Inject static assets from anywhere
+- Include assets inside the Astro bundle
 - Access the bundled/hashed path of an asset inside an integration
 
 ### How?
@@ -13,7 +13,7 @@ Main code is in [`static-asset-controller.ts`](static-asset-controller.ts) and [
 - **Build**: Uses a Vite plugin to:
     - Inject imports into build (`.../cat.png?static`)
     - Intercept the injected imports and use [`emitFile`](https://rollupjs.org/plugin-development/#this-emitfile) to add the asset to the bundle
-    - Update a global `Map` with bundled/hashed pathname (`/_astro/styles.DEh1v8hz.css`)
+    - Update a global `Map` with bundled/hashed pathname (`/_astro/styles.DEh1v8hz.css`) when generating the build
 
 ### Limitations
 
@@ -22,7 +22,6 @@ Main code is in [`static-asset-controller.ts`](static-asset-controller.ts) and [
     - `astro:build:ssr` hook
     - `astro:build:generated` hook
     - `astro:build:done` hook
-
 
 ### Example
 
@@ -81,6 +80,8 @@ export default defineConfig({
 
 ### What would this look like in Astro?
 
+If this was native to Astro you would not have to pass a `params` argument and you would not have to call the `initStaticAssets` function
+
 ```ts
 export default function() {
   let asset;
@@ -104,7 +105,7 @@ export default function() {
         //   id: 'DeV46TUP',
         //   pathname: '/_astro/cat.BXRYhKOC.png'
         // }
-        console.log("astro:build:done", asset());
+        console.log(asset());
       },
     }
   }
