@@ -10,13 +10,10 @@ Main code is in [`static-asset-controller.ts`](static-asset-controller.ts) and [
 
 ### How?
 
-- **Dev**: Uses middleware to serve static assets (`/styles.css`)
 - **Build**: Uses a Vite plugin to:
-    - Inject imports into build (`.../styles.css?injectAsset`)
-    - Intercept injected imports and inject the asset into the build using [`emitFile` from rollup
-](https://rollupjs.org/plugin-development/#this-emitfile)
-    - Update an external `Map` with bundled/hashed pathname (`/_astro/styles.DEh1v8hz.css`)
-    - Integration authors can then `.get` the map for the bundled/hashed path
+    - Inject imports into build (`.../cat.png?static`)
+    - Intercept the injected imports and use [`emitFile`](https://rollupjs.org/plugin-development/#this-emitfile) to add the asset to the bundle
+    - Update a global `Map` with bundled/hashed pathname (`/_astro/styles.DEh1v8hz.css`)
 
 ### Limitations
 
@@ -30,10 +27,16 @@ Main code is in [`static-asset-controller.ts`](static-asset-controller.ts) and [
 ### Example
 
 ```ts
+import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "astro/config";
-import { injectStaticAssets } from "./static-asset-controller";
+import { initStaticAssets, injectAsset } from "./static-asset-controller";
 
-let assets: ReturnType<typeof injectStaticAssets>;
+let asset: ReturnType<typeof injectAsset>;
+
+function resolveAsset(path: string) {
+  return resolve(fileURLToPath(import.meta.url), "../static", path);
+}
 
 export default defineConfig({
   integrations: [
@@ -41,33 +44,69 @@ export default defineConfig({
       name: "inject-assets",
       hooks: {
         "astro:config:setup": (params) => {
-          assets = injectStaticAssets(params, {
-            dir: "static",
-            cwd: import.meta.url,
+          asset = injectAsset(params, {
+            entrypoint: resolveAsset("cat.png"),
           });
 
-          // { resourceId: null, fileName: ".../styles.css", pathname: "/styles.css" }
-          console.log(
-            "astro:config:setup",
-            Array.from(assets.values()).map((a) => a.pathname),
-          );
+          // {
+          //   id: null,
+          //   entrypoint: 'C:/Users/Bryce/Desktop/Projects/Tests/inject-asset/static/cat.png',
+          //   pathname: '/static/cat.png'
+          // }
+          console.log("astro:config:setup", asset());
+
+          initStaticAssets(params);
         },
 
-        // { resourceId: "BIMVZw5i", fileName: ".../styles.css", pathname: "/_astro/styles.DEh1v8hz.css" }
+        // {
+        //   entrypoint: 'C:/Users/Bryce/Desktop/Projects/Tests/inject-asset/static/cat.png',
+        //   id: 'DeV46TUP',
+        //   pathname: '/_astro/cat.BXRYhKOC.png'
+        // }
         "astro:build:ssr": () => {
-          // console.log("astro:build:ssr", assets);
+          console.log("astro:build:ssr", asset());
         },
         "astro:build:generated": () => {
-          // console.log("astro:build:generated", assets);
+          console.log("astro:build:generated", asset());
         },
         "astro:build:done": () => {
-          console.log(
-            "astro:build:done",
-            Array.from(assets.values()).map((a) => a.pathname),
-          );
+          console.log("astro:build:done", asset());
         },
       },
     },
   ],
 });
+
+```
+
+### What would this look like in Astro?
+
+```ts
+export default function() {
+  let asset;
+  return {
+    name: "my-integration",
+    hooks: {
+      "astro:config:setup": ({ injectAsset }) => {
+        asset = injectAsset({
+          entrypoint: ".../static/cat.png",
+        });
+        // {
+        //   id: null,
+        //   entrypoint: 'C:/Users/Bryce/Desktop/Projects/Tests/inject-asset/static/cat.png',
+        //   pathname: '/static/cat.png'
+        // }
+        console.log(asset())
+      },
+      "astro:build:done": () => {
+        // {
+        //   entrypoint: 'C:/Users/Bryce/Desktop/Projects/Tests/inject-asset/static/cat.png',
+        //   id: 'DeV46TUP',
+        //   pathname: '/_astro/cat.BXRYhKOC.png'
+        // }
+        console.log("astro:build:done", asset());
+      },
+    }
+  }
+}
 ```

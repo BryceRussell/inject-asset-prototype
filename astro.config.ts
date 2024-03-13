@@ -1,7 +1,13 @@
+import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "astro/config";
-import { injectStaticAssets } from "./static-asset-controller";
+import { initStaticAssets, injectAsset } from "./static-asset-controller";
 
-let assets: ReturnType<typeof injectStaticAssets>;
+let asset: ReturnType<typeof injectAsset>;
+
+function resolveAsset(path: string) {
+	return resolve(fileURLToPath(import.meta.url), "../static", path);
+}
 
 export default defineConfig({
 	integrations: [
@@ -9,30 +15,45 @@ export default defineConfig({
 			name: "inject-assets",
 			hooks: {
 				"astro:config:setup": (params) => {
-					assets = injectStaticAssets(params, {
-						dir: "static",
-						cwd: import.meta.url,
+					asset = injectAsset(params, {
+						entrypoint: resolveAsset("cat.png"),
 					});
 
-					// { resourceId: null, fileName: ".../styles.css", pathname: "/styles.css" }
-					console.log(
-						"astro:config:setup",
-						Array.from(assets.values()).map((a) => a.pathname),
-					);
+					injectAsset(params, {
+						entrypoint: resolveAsset("red.png"),
+					});
+
+					injectAsset(params, {
+						entrypoint: resolveAsset("blue.png"),
+					});
+
+					injectAsset(params, {
+						entrypoint: resolveAsset("green.png"),
+					});
+
+					// {
+					// 	id: null,
+					// 	entrypoint: 'C:/Users/Bryce/Desktop/Projects/Tests/inject-asset/static/cat.png',
+					// 	pathname: '/static/cat.png'
+					// }
+					console.log("astro:config:setup", asset());
+
+					initStaticAssets(params);
 				},
 
-				// { resourceId: "BIMVZw5i", fileName: ".../styles.css", pathname: "/_astro/styles.DEh1v8hz.css" }
+				// {
+				// 	entrypoint: 'C:/Users/Bryce/Desktop/Projects/Tests/inject-asset/static/cat.png',
+				// 	id: 'DeV46TUP',
+				// 	pathname: '/_astro/cat.BXRYhKOC.png'
+				// }
 				"astro:build:ssr": () => {
-					// console.log("astro:build:ssr", assets);
+					console.log("astro:build:ssr", asset());
 				},
 				"astro:build:generated": () => {
-					// console.log("astro:build:generated", assets);
+					console.log("astro:build:generated", asset());
 				},
 				"astro:build:done": () => {
-					console.log(
-						"astro:build:done",
-						Array.from(assets.values()).map((a) => a.pathname),
-					);
+					console.log("astro:build:done", asset());
 				},
 			},
 		},
