@@ -4,8 +4,8 @@ Main code is in [`static-asset-controller.ts`](static-asset-controller.ts) and [
 
 ### Why?
 
-- Inject static assets from any folder
-- Include asset inside Astro bundle
+- Inject static assets from anywhere
+- Include assets inside the Astro bundle
 - Access the bundled/hashed path of an asset inside an integration
 
 ### How?
@@ -13,7 +13,7 @@ Main code is in [`static-asset-controller.ts`](static-asset-controller.ts) and [
 - **Build**: Uses a Vite plugin to:
     - Inject imports into build (`.../cat.png?static`)
     - Intercept the injected imports and use [`emitFile`](https://rollupjs.org/plugin-development/#this-emitfile) to add the asset to the bundle
-    - Update a global `Map` with bundled/hashed pathname (`/_astro/styles.DEh1v8hz.css`)
+    - Update a global `Map` with bundled/hashed pathname (`/_astro/styles.DEh1v8hz.css`) when generating the build
 
 ### Limitations
 
@@ -23,6 +23,37 @@ Main code is in [`static-asset-controller.ts`](static-asset-controller.ts) and [
     - `astro:build:generated` hook
     - `astro:build:done` hook
 
+### What would this look like in Astro?
+
+```ts
+export default function() {
+  let asset;
+  return {
+    name: "my-integration",
+    hooks: {
+      "astro:config:setup": ({ injectAsset }) => {
+        asset = injectAsset({
+          entrypoint: ".../static/cat.png",
+        });
+        // {
+        //   id: null,
+        //   entrypoint: 'C:/Users/Bryce/Desktop/Projects/Tests/inject-asset/static/cat.png',
+        //   pathname: '/static/cat.png'
+        // }
+        console.log(asset())
+      },
+      "astro:build:done": () => {
+        // {
+        //   entrypoint: 'C:/Users/Bryce/Desktop/Projects/Tests/inject-asset/static/cat.png',
+        //   id: 'DeV46TUP',
+        //   pathname: '/_astro/cat.BXRYhKOC.png'
+        // }
+        console.log(asset());
+      },
+    }
+  }
+}
+```
 
 ### Example
 
@@ -77,36 +108,4 @@ export default defineConfig({
   ],
 });
 
-```
-
-### What would this look like in Astro?
-
-```ts
-export default function() {
-  let asset;
-  return {
-    name: "my-integration",
-    hooks: {
-      "astro:config:setup": ({ injectAsset }) => {
-        asset = injectAsset({
-          entrypoint: ".../static/cat.png",
-        });
-        // {
-        //   id: null,
-        //   entrypoint: 'C:/Users/Bryce/Desktop/Projects/Tests/inject-asset/static/cat.png',
-        //   pathname: '/static/cat.png'
-        // }
-        console.log(asset())
-      },
-      "astro:build:done": () => {
-        // {
-        //   entrypoint: 'C:/Users/Bryce/Desktop/Projects/Tests/inject-asset/static/cat.png',
-        //   id: 'DeV46TUP',
-        //   pathname: '/_astro/cat.BXRYhKOC.png'
-        // }
-        console.log("astro:build:done", asset());
-      },
-    }
-  }
-}
 ```
