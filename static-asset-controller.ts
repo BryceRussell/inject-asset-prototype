@@ -53,7 +53,6 @@ export function initStaticAssets(params: HookParameters<"astro:config:setup">) {
 			return addRollupInput(opts, imports);
 		},
 		async load(moduleId) {
-			console.log(moduleId);
 			if (moduleId.endsWith("?static") && moduleId.startsWith(rootDir)) {
 				const entrypoint = moduleId.slice(0, moduleId.indexOf("?"));
 				const asset = assets.get(entrypoint);
