@@ -23,38 +23,6 @@ Main code is in [`static-asset-controller.ts`](static-asset-controller.ts) and [
     - `astro:build:generated` hook
     - `astro:build:done` hook
 
-### What would this look like in Astro?
-
-```ts
-export default function() {
-  let asset;
-  return {
-    name: "my-integration",
-    hooks: {
-      "astro:config:setup": ({ injectAsset }) => {
-        asset = injectAsset({
-          entrypoint: ".../static/cat.png",
-        });
-        // {
-        //   id: null,
-        //   entrypoint: 'C:/Users/Bryce/Desktop/Projects/Tests/inject-asset/static/cat.png',
-        //   pathname: '/static/cat.png'
-        // }
-        console.log(asset())
-      },
-      "astro:build:done": () => {
-        // {
-        //   entrypoint: 'C:/Users/Bryce/Desktop/Projects/Tests/inject-asset/static/cat.png',
-        //   id: 'DeV46TUP',
-        //   pathname: '/_astro/cat.BXRYhKOC.png'
-        // }
-        console.log(asset());
-      },
-    }
-  }
-}
-```
-
 ### Example
 
 ```ts
@@ -108,4 +76,38 @@ export default defineConfig({
   ],
 });
 
+```
+
+### What would this look like in Astro?
+
+If this was native to Astro you would not have to pass a `params` argument and you would not have to call the `initStaticAssets` function
+
+```ts
+export default function() {
+  let asset;
+  return {
+    name: "my-integration",
+    hooks: {
+      "astro:config:setup": ({ injectAsset }) => {
+        asset = injectAsset({
+          entrypoint: ".../static/cat.png",
+        });
+        // {
+        //   id: null,
+        //   entrypoint: 'C:/Users/Bryce/Desktop/Projects/Tests/inject-asset/static/cat.png',
+        //   pathname: '/static/cat.png'
+        // }
+        console.log(asset())
+      },
+      "astro:build:done": () => {
+        // {
+        //   entrypoint: 'C:/Users/Bryce/Desktop/Projects/Tests/inject-asset/static/cat.png',
+        //   id: 'DeV46TUP',
+        //   pathname: '/_astro/cat.BXRYhKOC.png'
+        // }
+        console.log(asset());
+      },
+    }
+  }
+}
 ```
