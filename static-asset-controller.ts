@@ -10,9 +10,11 @@ export interface InjectAsset {
 }
 
 export interface InjectedAsset extends InjectAsset {
+	id: string | null;
 	pathname: string;
-	id: string;
 }
+
+const assets = new Map<string, InjectedAsset>();
 
 export function injectAsset(
 	{ config }: HookParameters<"astro:config:setup">,
@@ -20,26 +22,27 @@ export function injectAsset(
 ) {
 	const rootDir = normalizePath(fileURLToPath(config.root.toString()));
 	const entrypoint = normalizePath(asset.entrypoint);
+	const pathname = entrypoint.slice(rootDir.length - 1);
+
 	if (!entrypoint.startsWith(rootDir))
 		throw Error("Asset must be inside root directory!");
-	const pathname = entrypoint.slice(rootDir.length - 1);
-	globalThis.astroStaticAssets ??= new Map<string, InjectedAsset>();
-	globalThis.astroStaticAssets.set(entrypoint, {
+
+	assets.set(entrypoint, {
 		id: null,
 		entrypoint,
 		pathname,
 	});
-	return (): InjectedAsset => globalThis.astroStaticAssets.get(entrypoint);
+
+	return (): InjectedAsset | null => assets.get(entrypoint) || null;
 }
 
 export function initStaticAssets(params: HookParameters<"astro:config:setup">) {
 	const { command, config, updateConfig } = params;
 
-	if (command !== "build" || !globalThis.astroStaticAssets) return;
+	if (command !== "build" || !assets) return;
 
 	const rootDir = normalizePath(fileURLToPath(config.root.toString()));
-
-	const imports = Array.from(globalThis.astroStaticAssets.keys()).map(
+	const imports = Array.from(assets.keys()).map(
 		(entrypoint) => entrypoint + "?static",
 	);
 
@@ -50,25 +53,25 @@ export function initStaticAssets(params: HookParameters<"astro:config:setup">) {
 			return addRollupInput(opts, imports);
 		},
 		async load(moduleId) {
+			console.log(moduleId);
 			if (moduleId.endsWith("?static") && moduleId.startsWith(rootDir)) {
 				const entrypoint = moduleId.slice(0, moduleId.indexOf("?"));
-				const asset = globalThis.astroStaticAssets.get(entrypoint);
-				asset.id = this.emitFile({
-					name: basename(entrypoint),
-					source: await readFile(entrypoint),
-					type: "asset",
-				});
-				globalThis.astroStaticAssets.set(entrypoint, asset);
+				const asset = assets.get(entrypoint);
+				if (asset) {
+					asset.id = this.emitFile({
+						name: basename(entrypoint),
+						source: await readFile(entrypoint),
+						type: "asset",
+					});
+					assets.set(entrypoint, asset);
+				}
 			}
 		},
 		generateBundle() {
-			for (const [
-				entrypoint,
-				asset,
-			] of globalThis.astroStaticAssets.entries()) {
+			for (const [entrypoint, asset] of assets.entries()) {
 				if (!asset.id) continue;
 				asset.pathname = `/${this.getFileName(asset.id)}`;
-				globalThis.astroStaticAssets.set(entrypoint, asset);
+				assets.set(entrypoint, asset);
 			}
 		},
 	};
