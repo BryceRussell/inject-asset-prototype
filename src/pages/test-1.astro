@@ -1,22 +1,22 @@
 ---
-import asset from "../../static/cat.png?url";
-
-console.log(asset);
+const test = (path: string) => import.meta.env.DEV
+	? `/static/${path}`
+	: `__ASTRO_STATIC_ASSET__C:/Users/Bryce/Desktop/Projects/Tests/inject-asset/static/cat.png?__`
 ---
 
 <html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<!-- Just to test dev middleware, will break in dev build it will be bundled -->
-		<link rel="stylesheet" href="/styles.css" />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-		<!-- Just to test dev middleware, will break in build since it will be bundled -->
-		<img src={asset} alt="">
-	</body>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <!-- This is just to make testing easier dont do this -->
+    <link rel="stylesheet" href={import.meta.env.DEV ? "/static/styles.css" : "__ASTRO_STATIC_ASSET__C:/Users/Bryce/Desktop/Projects/Tests/inject-asset/static/styles.css?__"} />
+    <title>Astro</title>
+  </head>
+  <body>
+    <h1>Astro</h1>
+    <!-- This is just to make testing easier dont do this -->
+    <img src={import.meta.env.DEV ? "/static/cat.png" : "__ASTRO_STATIC_ASSET__C:/Users/Bryce/Desktop/Projects/Tests/inject-asset/static/cat.png?__"} alt="" />
+  </body>
 </html>

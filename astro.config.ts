@@ -3,8 +3,6 @@ import { fileURLToPath } from "node:url";
 import { defineConfig } from "astro/config";
 import { initStaticAssets, injectAsset } from "./static-asset-controller";
 
-let asset: ReturnType<typeof injectAsset>;
-
 function resolveAsset(path: string) {
 	return resolve(fileURLToPath(import.meta.url), "../static", path);
 }
@@ -15,45 +13,19 @@ export default defineConfig({
 			name: "inject-assets",
 			hooks: {
 				"astro:config:setup": (params) => {
-					asset = injectAsset(params, {
+					globalThis._static_styles = injectAsset(params, {
+						entrypoint: resolveAsset("styles.css"),
+					});
+
+					globalThis._static_image = injectAsset(params, {
 						entrypoint: resolveAsset("cat.png"),
 					});
 
-					injectAsset(params, {
-						entrypoint: resolveAsset("red.png"),
-					});
-
-					injectAsset(params, {
-						entrypoint: resolveAsset("blue.png"),
-					});
-
-					injectAsset(params, {
-						entrypoint: resolveAsset("green.png"),
-					});
-
-					// {
-					// 	id: null,
-					// 	entrypoint: 'C:/Users/Bryce/Desktop/Projects/Tests/inject-asset/static/cat.png',
-					// 	pathname: '/static/cat.png'
-					// }
-					console.log("astro:config:setup", asset());
+					// dev:		'/static/cat.png'
+					// build: '__ASTRO_STATIC_ASSET__C:/.../static/cat.png?__'
+					console.log("astro:config:setup", globalThis._static_image);
 
 					initStaticAssets(params);
-				},
-
-				// {
-				// 	entrypoint: 'C:/Users/Bryce/Desktop/Projects/Tests/inject-asset/static/cat.png',
-				// 	id: 'DeV46TUP',
-				// 	pathname: '/_astro/cat.BXRYhKOC.png'
-				// }
-				"astro:build:ssr": () => {
-					console.log("astro:build:ssr", asset());
-				},
-				"astro:build:generated": () => {
-					console.log("astro:build:generated", asset());
-				},
-				"astro:build:done": () => {
-					console.log("astro:build:done", asset());
 				},
 			},
 		},

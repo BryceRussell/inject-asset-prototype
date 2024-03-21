@@ -14,35 +14,33 @@ export interface InjectedAsset extends InjectAsset {
 	pathname: string;
 }
 
-const assets = new Map<string, InjectedAsset>();
+const assetReferences = new Map<string, string | null>();
 
 export function injectAsset(
-	{ config }: HookParameters<"astro:config:setup">,
+	{ command, config }: HookParameters<"astro:config:setup">,
 	asset: InjectAsset,
 ) {
 	const rootDir = normalizePath(fileURLToPath(config.root.toString()));
 	const entrypoint = normalizePath(asset.entrypoint);
-	const pathname = entrypoint.slice(rootDir.length - 1);
+	const pathname = command === "build"
+		? `__ASTRO_STATIC_ASSET__${entrypoint}?__`
+		: entrypoint.slice(rootDir.length - 1)
 
 	if (!entrypoint.startsWith(rootDir))
 		throw Error("Asset must be inside root directory!");
 
-	assets.set(entrypoint, {
-		id: null,
-		entrypoint,
-		pathname,
-	});
+	assetReferences.set(entrypoint, null)
 
-	return (): InjectedAsset | null => assets.get(entrypoint) || null;
+	return pathname;
 }
 
 export function initStaticAssets(params: HookParameters<"astro:config:setup">) {
 	const { command, config, updateConfig } = params;
 
-	if (command !== "build" || !assets) return;
+	if (command !== "build") return;
 
 	const rootDir = normalizePath(fileURLToPath(config.root.toString()));
-	const imports = Array.from(assets.keys()).map(
+	const imports = Array.from(assetReferences.keys()).map(
 		(entrypoint) => entrypoint + "?static",
 	);
 
@@ -55,23 +53,23 @@ export function initStaticAssets(params: HookParameters<"astro:config:setup">) {
 		async load(moduleId) {
 			if (moduleId.endsWith("?static") && moduleId.startsWith(rootDir)) {
 				const entrypoint = moduleId.slice(0, moduleId.indexOf("?"));
-				const asset = assets.get(entrypoint);
-				if (asset) {
-					asset.id = this.emitFile({
-						name: basename(entrypoint),
-						source: await readFile(entrypoint),
-						type: "asset",
-					});
-					assets.set(entrypoint, asset);
-				}
+				assetReferences.set(entrypoint, this.emitFile({
+					name: basename(entrypoint),
+					source: await readFile(entrypoint),
+					type: "asset",
+				}));
 			}
 		},
-		generateBundle() {
-			for (const [entrypoint, asset] of assets.entries()) {
-				if (!asset.id) continue;
-				asset.pathname = `/${this.getFileName(asset.id)}`;
-				assets.set(entrypoint, asset);
-			}
+		renderChunk(code) {
+			const matcher = /__ASTRO_STATIC_ASSET__([^?]+)\?__/g
+
+			code = code.replace(matcher, (match, entrypoint) => {
+				const id = assetReferences.get(entrypoint)!
+				if (id) return `/${this.getFileName(id)}`
+				return match
+			})
+			
+			return { code }
 		},
 	};
 
