@@ -45,7 +45,8 @@ export default defineConfig({
           });
 
           // dev:    '/static/cat.png'
-          // build:  '__ASTRO_STATIC_ASSET__C:/.../static/cat.png?__'
+          // build:  '__ASTRO_STATIC_ASSET__C:/.../static/cat.png?__' 
+          //         ^^^ intermidate value replace with bundled path during build (/_astro/cat.BXRYhKOC.png)
           console.log("astro:config:setup", image);
 
           initStaticAssets(params);
