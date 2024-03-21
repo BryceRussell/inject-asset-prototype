@@ -1,12 +1,4 @@
-# Prototype for injecting static assets into Astro bundle
-
-Main code is in [`static-asset-controller.ts`](static-asset-controller.ts) and [`astro.config.ts`](astro.config.ts). To test, run the `dev` or `build` commands and watch the console
-
-### Why?
-
-- Inject static assets from anywhere
-- Include assets inside the Astro bundle
-- Access the bundled/hashed path of an asset inside an integration
+# Static Analysis
 
 ### How?
 
@@ -17,6 +9,11 @@ Works similar to a `?url` import
     - Inject imports into build (`.../cat.png?static`)
     - Intercept the injected imports and use [`emitFile`](https://rollupjs.org/plugin-development/#this-emitfile) to add the asset to the bundle
     - Use static analysis to find injected asset paths and replace them
+
+### Limitations
+
+- Similar to `?url` import
+- During build, returned value is an intermidate value used for static analysis and users may assume that it is always a path and do some dynamic stuff with it
 
 ### Example
 
