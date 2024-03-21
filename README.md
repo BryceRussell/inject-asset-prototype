@@ -30,31 +30,31 @@ let styles: string
 let image: string;
 
 function resolveAsset(path: string) {
-	return resolve(fileURLToPath(import.meta.url), "../static", path);
+  return resolve(fileURLToPath(import.meta.url), "../static", path);
 }
 
 export default defineConfig({
-	integrations: [
-		{
-			name: "inject-assets",
-			hooks: {
-				"astro:config:setup": (params) => {
-					styles = injectAsset(params, {
-						entrypoint: resolveAsset("styles.css"),
-					});
+  integrations: [
+    {
+      name: "inject-assets",
+      hooks: {
+        "astro:config:setup": (params) => {
+          styles = injectAsset(params, {
+            entrypoint: resolveAsset("styles.css"),
+          });
 
-					image = injectAsset(params, {
-						entrypoint: resolveAsset("cat.png"),
-					});
+          image = injectAsset(params, {
+            entrypoint: resolveAsset("cat.png"),
+          });
 
-					// dev:		'/static/cat.png'
-					// build: '__ASTRO_STATIC_ASSET__C:/.../static/cat.png?__'
-					console.log("astro:config:setup", image);
+          // dev:    '/static/cat.png'
+          // build:  '__ASTRO_STATIC_ASSET__C:/.../static/cat.png?__'
+          console.log("astro:config:setup", image);
 
-					initStaticAssets(params);
-				},
-			},
-		},
-	],
+          initStaticAssets(params);
+        },
+      },
+    },
+  ],
 });
 ```
