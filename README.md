@@ -1,19 +1,13 @@
-# Prototype for injecting static assets into Astro bundle
-
-Main code is in [`static-asset-controller.ts`](static-asset-controller.ts) and [`astro.config.ts`](astro.config.ts). To test, run the `dev` or `build` commands and watch the console
-
-### Why?
-
-- Inject static assets from anywhere
-- Include assets inside the Astro bundle
-- Access the bundled/hashed path of an asset inside an integration
+# Getter Function
 
 ### How?
 
+- **Dev**: Returns an absolute path relative to the root of your project
 - **Build**: Uses a Vite plugin to:
     - Inject imports into build (`.../cat.png?static`)
     - Intercept the injected imports and use [`emitFile`](https://rollupjs.org/plugin-development/#this-emitfile) to add the asset to the bundle
     - Update a global `Map` with bundled/hashed pathname (`/_astro/styles.DEh1v8hz.css`) when generating the build
+    - Users can use a getter function returned by `injectAsset` to access values related to asset
 
 ### Limitations
 
@@ -76,38 +70,4 @@ export default defineConfig({
   ],
 });
 
-```
-
-### What would this look like in Astro?
-
-If this was native to Astro you would not have to pass a `params` argument and you would not have to call the `initStaticAssets` function
-
-```ts
-export default function() {
-  let asset;
-  return {
-    name: "my-integration",
-    hooks: {
-      "astro:config:setup": ({ injectAsset }) => {
-        asset = injectAsset({
-          entrypoint: ".../static/cat.png",
-        });
-        // {
-        //   id: null,
-        //   entrypoint: 'C:/Users/Bryce/Desktop/Projects/Tests/inject-asset/static/cat.png',
-        //   pathname: '/static/cat.png'
-        // }
-        console.log(asset())
-      },
-      "astro:build:done": () => {
-        // {
-        //   entrypoint: 'C:/Users/Bryce/Desktop/Projects/Tests/inject-asset/static/cat.png',
-        //   id: 'DeV46TUP',
-        //   pathname: '/_astro/cat.BXRYhKOC.png'
-        // }
-        console.log(asset());
-      },
-    }
-  }
-}
 ```
